@@ -67,11 +67,21 @@ python -m optimisation.optuna_search --trials 40 --timeout 1200
 #    student-test metrics within 0.003 of untuned; inference ~8x slower (475 trees / 211 leaves vs 300 / 31).
 #    artifacts/model.joblib (tuned) is what the API serves.
 
-# 5. HMM / Viterbi evaluation -> results/hmm_comparison.csv  (pending: hmm/evaluate.py, Yajat)
+# 5. HMM / Viterbi evaluation -> results/hmm_beta_sweep.csv, results/hmm_comparison.csv, hmm.beta in config.yaml
 python -m hmm.evaluate
+#    Beta sweep on train trips 00000001-00000005 over {10, 25, 50, 100, 200}; the chosen beta is
+#    written to (and read from) hmm.beta in config.yaml.
+#    Top-1 is averaged differently in the two tables: hmm_comparison.csv's mean row is the unweighted
+#    mean of the 10 per-trip values (classifier-only 0.8721, HMM 0.9158), while
+#    model_comparison_final.csv is pooled over all 19,160 student_test points (classifier-only 0.8545;
+#    HMM pooled 0.9047). Same points, same true arcs; long low-scoring trips weigh more when pooled.
 
 # 6. Folium maps -> maps/out/
 python -m maps.folium_maps
+python -m maps.make_prediction_maps   # HMM predictions, biggest/smallest HMM gain trips
+
+# report figures -> results/figures/
+python -m report.make_figures
 
 # 7. API (Laptop 1)
 set PATHSNAP_EVAL_DATA=<path to evaluator trips>
@@ -84,6 +94,8 @@ streamlit run ui/app.py
 Random Forest: `models/rf_test.py` is the run the results come from. It reuses the
 hyperparameters of `models/rf.py` (the original CV-only exploration run, not a required step)
 with `n_jobs=-1`. With `random_state=42` fixed, `n_jobs` only changes speed, not results.
+`artifacts/random_forest.joblib` (138 MB) is not committed (too large); regenerate it with
+`python -m models.rf_test`.
 
 ## AI use disclosure
 - Claude Code: label alignment, candidate generation, feature builder, baselines, comparison script (reviewed and explained by Yadu)
