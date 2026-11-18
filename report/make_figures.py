@@ -188,12 +188,82 @@ def tuning_comparison() -> None:
     save(fig, "tuning_comparison.png")
 
 
+def hmm_comparison() -> None:
+    """Per-trip classifier-only vs HMM, read from results/hmm_comparison.csv (hmm/evaluate.py)."""
+    t = pd.read_csv(REPO_ROOT / "results" / "hmm_comparison.csv", dtype={"trip_id": str})
+    trips = t[t["record_type"] == "trip"]
+    mean = t[t["record_type"] == "mean"].iloc[0]
+    labels = trips["trip_id"].tolist() + ["mean"]
+    x, w = np.arange(len(labels)), 0.38
+    fig, axes = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
+    for ax, (cls_col, hmm_col, name) in zip(axes, [
+            ("classifier_only_top1", "hmm_top1", "Top-1 accuracy"),
+            ("classifier_only_route_continuity", "hmm_route_continuity", "Route continuity")]):
+        for k, (col, color, lbl) in enumerate([(cls_col, BLUE, "classifier only (argmax)"),
+                                               (hmm_col, ORANGE, "classifier + HMM/Viterbi")]):
+            vals = trips[col].tolist() + [mean[col]]
+            b = ax.bar(x + (k - 0.5) * w, vals, w, color=color, label=lbl, edgecolor="white")
+            ax.bar_label(b, fmt="%.2f", fontsize=7, padding=1)
+        ax.set_ylabel(name)
+        ax.set_ylim(0, 1.15)
+        ax.axvline(len(labels) - 1.5, color="black", linewidth=0.8, linestyle=":")
+        ax.spines[["top", "right"]].set_visible(False)
+        ax.grid(axis="y", alpha=0.3)
+        ax.set_axisbelow(True)
+    axes[0].legend(frameon=False, loc="upper center", ncol=2)
+    axes[0].set_title("Classifier-only vs HMM per trip, student_test (tuned LightGBM; "
+                      "mean = unweighted over trips)")
+    axes[1].set_xticks(x, labels, rotation=30)
+    axes[1].set_xlabel("student_test trip")
+    save(fig, "hmm_comparison.png")
+
+
+def hmm_beta_sweep() -> None:
+    """Top-1 vs beta from results/hmm_beta_sweep.csv; chosen beta read from config.yaml."""
+    from common.config import CFG
+
+    chosen = CFG["hmm"]["beta"]
+    t = pd.read_csv(REPO_ROOT / "results" / "hmm_beta_sweep.csv", dtype={"trip_id": str})
+    trips = t[t["record_type"] == "trip"]
+    mean = t[t["record_type"] == "mean"].sort_values("beta")
+    fig, ax = plt.subplots(figsize=(8, 5))
+    for tid, g in trips.groupby("trip_id"):
+        g = g.sort_values("beta")
+        ax.plot(g["beta"], g["top1_accuracy"], color=GREY, linewidth=1, marker="o", markersize=3)
+        ax.annotate(tid, (g["beta"].iloc[-1], g["top1_accuracy"].iloc[-1]), fontsize=7,
+                    xytext=(4, 0), textcoords="offset points", va="center", color="#555555")
+    ax.plot(mean["beta"], mean["top1_accuracy"], color=BLUE, linewidth=2.5, marker="o",
+            label="mean over trips")
+    ax.axvline(chosen, color=ORANGE, linestyle="--", linewidth=1.5, label=f"chosen beta = {chosen}")
+    ax.set_xscale("log")
+    ax.set_xticks(mean["beta"], [str(int(b)) for b in mean["beta"]])
+    ax.set_xlabel("beta (transition scale, m), log scale")
+    ax.set_ylabel("HMM top-1 accuracy")
+    ax.set_title(f"HMM beta sweep, train trips {', '.join(sorted(trips['trip_id'].unique()))}\n"
+                 "(grey = per trip, tuned LightGBM probabilities)", fontsize=10)
+    ax.legend(frameon=False, loc="lower left")
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(alpha=0.3)
+    save(fig, "hmm_beta_sweep.png")
+
+
 if __name__ == "__main__":
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--only", choices=["eda", "models", "hmm"], default=None,
+                    help="eda: trajectories/network/missing; models: tuning + confusion; hmm: HMM plots")
+    only = ap.parse_args().only
     FIGS.mkdir(parents=True, exist_ok=True)
-    trips = sample_train_trips()
-    print("sampled train trips (seed 42):", trips)
-    gps_trajectories(trips)
-    road_network(smallest_extent(trips))
-    missing_values()
-    tuning_comparison()
-    confusion_matrices()
+    if only in (None, "eda"):
+        trips = sample_train_trips()
+        print("sampled train trips (seed 42):", trips)
+        gps_trajectories(trips)
+        road_network(smallest_extent(trips))
+        missing_values()
+    if only in (None, "models"):
+        tuning_comparison()
+        confusion_matrices()
+    if only in (None, "hmm"):
+        hmm_comparison()
+        hmm_beta_sweep()
