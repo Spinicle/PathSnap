@@ -1,6 +1,6 @@
 # Shared settings. Change values here, not hardcoded in scripts.
 data:
-  root: "../Student folder"        # override with env PATHSNAP_DATA
+  root: "../Student folder/Student folder"  # override with env PATHSNAP_DATA
   train_dir: train
   test_dir: student_test
   eval_dir: null                   # set on the API laptop only (env PATHSNAP_EVAL_DATA)
