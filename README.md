@@ -62,6 +62,10 @@ python -m models.compare
 # 4. Optuna (TPE) on LightGBM -> results/optuna_trials.csv, artifacts/best_params.json,
 #    artifacts/model.joblib, results/tuning_comparison.csv
 python -m optimisation.optuna_search --trials 40 --timeout 1200
+#    --trials 40 is the cap; 17 trials completed within the 1200 s timeout (see results/optuna_trials.csv;
+#    the first 10 are TPE's random startup trials). Tuned CV macro F1 0.9043 vs 0.9038 untuned;
+#    student-test metrics within 0.003 of untuned; inference ~8x slower (475 trees / 211 leaves vs 300 / 31).
+#    artifacts/model.joblib (tuned) is what the API serves.
 
 # 5. HMM / Viterbi evaluation -> results/hmm_comparison.csv  (pending: hmm/evaluate.py, Yajat)
 python -m hmm.evaluate
