@@ -1,0 +1,26 @@
+# Shared settings. Change values here, not hardcoded in scripts.
+data:
+  root: "../Student folder"        # override with env PATHSNAP_DATA
+  train_dir: train
+  test_dir: student_test
+  eval_dir: null                   # set on the API laptop only (env PATHSNAP_EVAL_DATA)
+
+geo:
+  crs_projected: "EPSG:32636"      # UTM 36N, data is around 35.5E 49.6N
+
+candidates:
+  radius_m: 50
+  max_k: 8
+
+cv:
+  n_splits: 5                      # GroupKFold by trip_id
+  seed: 42
+
+hmm:
+  sigma_m: null                    # emission noise if needed (tune on train/student_test only)
+  beta: null                       # transition scale (tune on train/student_test only)
+  max_gap_s: 30
+
+api:
+  host: "0.0.0.0"
+  port: 8000

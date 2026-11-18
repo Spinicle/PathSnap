@@ -1,0 +1,25 @@
+# raw data never goes in the repo
+data/
+Student folder/
+*.track
+*.nodes
+*.arcs
+*.route
+
+# python / env
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+.env
+
+# big intermediates (regenerate from code)
+*.parquet
+cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
