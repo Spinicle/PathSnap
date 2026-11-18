@@ -21,6 +21,7 @@ per fold followed by aggregate ``mean`` and ``std`` rows.
 from __future__ import annotations
 
 import time
+import json
 from pathlib import Path
 from typing import Any, Optional
 
@@ -145,37 +146,18 @@ def _positive_class_probability(estimator: BaseEstimator, raw: Any, row_count: i
     return positive_probability
 
 
-def _decision_scores(estimator: BaseEstimator, raw: Any, row_count: int) -> np.ndarray:
-    """Return scores oriented so larger values favor label 1."""
-    scores = np.asarray(raw, dtype=float)
-    classes = getattr(estimator, "classes_", None)
-    classes = np.asarray(classes) if classes is not None else np.asarray([0, 1])
-
-    if scores.ndim == 1 and scores.shape[0] == row_count:
-        if len(classes) == 2 and classes[1] == 0:
-            scores = -scores
-    elif scores.ndim == 2 and scores.shape == (row_count, len(classes)):
-        positive_indices = np.flatnonzero(classes == 1)
-        if not len(positive_indices):
-            raise ValueError("decision_function does not provide a score for label 1.")
-        scores = scores[:, positive_indices[0]]
-    else:
-        raise ValueError(
-            "decision_function must return one binary score per validation sample."
-        )
-
-    if not np.isfinite(scores).all():
-        raise ValueError("decision_function returned non-finite scores.")
-    return scores
-
-
 def _observation_top1_accuracy(
     y_true: np.ndarray,
     scores: np.ndarray,
     groups: np.ndarray,
     observation_ids: np.ndarray,
 ) -> float:
-    """Measure whether the top-scoring candidate is positive for each observation."""
+    """Measure probability-ranked Top-1 accuracy for observations in candidate rows.
+
+    This metric is conditional on the feature table containing generated candidate
+    rows: observations absent from ``observation_ids`` are not invented and are
+    not included in this denominator.
+    """
     selected: dict[tuple[Any, Any], int] = {}
     for row_index, (trip_id, observation_id) in enumerate(zip(groups, observation_ids)):
         key = (trip_id, observation_id)
@@ -211,25 +193,49 @@ def _candidate_miss_rate(
     return float(np.mean(misses))
 
 
-def _candidate_miss_rate_from_labels(
-    y_true: np.ndarray,
-    groups: np.ndarray,
-    observation_ids: np.ndarray,
-) -> float:
-    """Return the fraction of observations with no positive candidate row."""
-    positive_observations: set[tuple[Any, Any]] = set()
-    all_observations: set[tuple[Any, Any]] = set()
-    for label, trip_id, observation_id in zip(y_true, groups, observation_ids):
-        key = (trip_id, observation_id)
-        all_observations.add(key)
-        if label == 1:
-            positive_observations.add(key)
-    if not all_observations:
-        return np.nan
-    return float(
-        sum(key not in positive_observations for key in all_observations)
-        / len(all_observations)
-    )
+def _update_model_comparison(
+    comparison_path: Path,
+    model_name: str,
+    fold_frame: pd.DataFrame,
+    estimator: BaseEstimator,
+    n_splits: int,
+    random_state: Optional[int],
+) -> None:
+    """Append or replace one model aggregate without deleting other models."""
+    comparison_row: dict[str, Any] = {
+        "model_name": model_name,
+        "n_splits": n_splits,
+        "random_state": random_state if random_state is not None else "",
+    }
+    try:
+        comparison_row["model_config"] = json.dumps(
+            estimator.get_params(deep=False),
+            sort_keys=True,
+            default=str,
+        )
+    except (AttributeError, TypeError, ValueError):
+        comparison_row["model_config"] = ""
+
+    for column in _METRIC_COLUMNS:
+        values = pd.to_numeric(fold_frame[column], errors="coerce")
+        comparison_row[f"{column}_mean"] = float(values.mean())
+        comparison_row[f"{column}_std"] = float(values.std(ddof=1))
+
+    comparison_path.parent.mkdir(parents=True, exist_ok=True)
+    if comparison_path.exists():
+        existing = pd.read_csv(comparison_path)
+        if "model_name" not in existing.columns:
+            raise ValueError(
+                f"{comparison_path} exists but does not contain a model_name column."
+            )
+        existing = existing.loc[existing["model_name"] != model_name].copy()
+        combined = pd.concat(
+            [existing, pd.DataFrame([comparison_row])],
+            ignore_index=True,
+        )
+    else:
+        combined = pd.DataFrame([comparison_row])
+    combined.to_csv(comparison_path, index=False)
 
 
 def evaluate_model(
@@ -249,12 +255,13 @@ def evaluate_model(
     """Evaluate a binary candidate classifier with trip-grouped cross-validation.
 
     A fresh clone is fitted in every GroupKFold split. Predictions use the
-    estimator's ``predict`` method; Top-1 ranking uses positive-class
-    probabilities, then decision scores, then hard predictions if neither
-    scoring interface is available. Log loss is NaN when probabilities are
+    estimator's ``predict`` method. Observation-level Top-1 ranking uses
+    positive-class probabilities and is calculated only for observations that
+    have candidate rows in the validation data; absent observations are not
+    invented. Log loss and Top-1 accuracy are NaN when probabilities are
     unavailable. Precision/recall and macro-F1 use sklearn's explicit
-    ``zero_division=0`` convention. Undefined optional candidate-miss metrics
-    are NaN, not fabricated zeros.
+    ``zero_division=0`` convention. Candidate Miss Rate is NaN unless both
+    candidate_ids and reference_ids are supplied.
 
     Args:
         estimator: An unfitted scikit-learn-compatible binary classifier.
@@ -387,20 +394,7 @@ def evaluate_model(
                     fold_estimator, raw_probabilities, len(validation_indices)
                 )
 
-        if probabilities is not None:
-            ranking_scores = probabilities
-        elif callable(getattr(fold_estimator, "decision_function", None)):
-            try:
-                raw_scores = fold_estimator.decision_function(X_validation)
-            except NotImplementedError:
-                raw_scores = None
-            ranking_scores = (
-                _decision_scores(fold_estimator, raw_scores, len(validation_indices))
-                if raw_scores is not None
-                else predicted.astype(float)
-            )
-        else:
-            ranking_scores = predicted.astype(float)
+        ranking_scores = probabilities
         inference_time = time.perf_counter() - inference_start
 
         tn, fp, fn, tp = confusion_matrix(
@@ -431,11 +425,15 @@ def evaluate_model(
                 if probabilities is not None
                 else np.nan
             ),
-            "top1_accuracy": _observation_top1_accuracy(
-                y_validation,
-                ranking_scores,
-                group_array[validation_indices],
-                observation_array[validation_indices],
+            "top1_accuracy": (
+                _observation_top1_accuracy(
+                    y_validation,
+                    ranking_scores,
+                    group_array[validation_indices],
+                    observation_array[validation_indices],
+                )
+                if ranking_scores is not None
+                else np.nan
             ),
             "candidate_miss_rate": (
                 _candidate_miss_rate(
@@ -445,11 +443,7 @@ def evaluate_model(
                     reference_array[validation_indices],
                 )
                 if candidate_array is not None and reference_array is not None
-                else _candidate_miss_rate_from_labels(
-                    y_validation,
-                    group_array[validation_indices],
-                    observation_array[validation_indices],
-                )
+                else np.nan
             ),
             "training_time_seconds": float(training_time),
             "inference_time_seconds": float(inference_time),
@@ -481,4 +475,13 @@ def evaluate_model(
     output_path = Path(results_dir) / f"{model_name}.csv"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     results.to_csv(output_path, index=False)
+    comparison_path = Path(results_dir).parent / "model_comparison.csv"
+    _update_model_comparison(
+        comparison_path=comparison_path,
+        model_name=model_name,
+        fold_frame=fold_frame,
+        estimator=estimator,
+        n_splits=n_splits,
+        random_state=random_state,
+    )
     return results
