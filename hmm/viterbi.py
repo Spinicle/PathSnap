@@ -99,6 +99,9 @@ def decode(
     if ((candidates["arc_id"] < 0) | (candidates["arc_id"] >= len(trip["arcs"]))).any():
         raise ValueError("Candidate arc_id values must refer to rows in the trip arcs")
     if "proj_frac" not in candidates:
+     if "f_proj_frac" in candidates:
+        candidates["proj_frac"] = candidates["f_proj_frac"]
+    else:
         candidates["proj_frac"] = 0.5
     candidates["proj_frac"] = candidates["proj_frac"].astype(float).clip(0.0, 1.0)
 
