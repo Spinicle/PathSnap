@@ -16,5 +16,6 @@ pyyaml
 fastapi
 uvicorn[standard]
 requests
+pyarrow
 streamlit
 streamlit-folium

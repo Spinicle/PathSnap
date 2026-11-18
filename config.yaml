@@ -6,7 +6,8 @@ data:
   eval_dir: null                   # set on the API laptop only (env PATHSNAP_EVAL_DATA)
 
 geo:
-  crs_projected: "EPSG:32636"      # UTM 36N, data is around 35.5E 49.6N
+  crs_projected: "EPSG:32636"      # kept so data_processing/geo.py still imports; trips are worldwide
+  crs_mode: per-trip               # UTM zone picked per trip, see features/candidates.py project_trip
 
 candidates:
   radius_m: 50
