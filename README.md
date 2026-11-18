@@ -5,20 +5,25 @@ UE24CS352A Machine Learning hackathon, PES University.
 Noisy GPS points -> candidate road segments -> classifier scores -> HMM/Viterbi -> continuous route.
 The FastAPI service runs on Laptop 1 and the UI on Laptop 2.
 
-## Structure
-| folder | contents | owner |
-|---|---|---|
-| `data_processing/` | loading, projection, EDA, label alignment | A |
-| `features/` | candidate generation, feature table | A |
-| `models/` | 5-model comparison, metrics | B |
-| `optimisation/` | Optuna (Bayesian) search | B |
-| `hmm/` | HMM + Viterbi decoder | C |
-| `maps/` | Folium maps | C |
-| `api/` | FastAPI backend | D |
-| `ui/` | Streamlit evaluator UI | D |
-| `results/` | CSVs, logs, figures (all report numbers come from here) | all |
-| `artifacts/` | trained model + configs | B |
-| `docs/CONTRACTS.md` | shared interfaces | all |
+## Repository structure
+Organised by the components required in the Deliverables guideline (Deliverable 1).
+
+| Required component | Where it is |
+|---|---|
+| Data processing | `data_processing/`: `loader.py` (raw file readers), `eda.py` (inventory, gaps, missing values), `geo.py` (projection, distance, heading), `align_labels.py` (per-point labels from `.route`) |
+| Feature engineering | `features/`: `candidates.py` (STRtree candidates, 50 m / max 8), `build_features.py` (feature table) |
+| Model training (every model) | `models/`: `logreg.py`, `nb.py`, `rf.py` + `rf_test.py`, `lgbm.py`, `mlp.py` |
+| Model evaluation | `models/common_eval.py` (GroupKFold metrics), `models/compare.py` + `models/compare_models.py` (comparison tables and plots), `report/make_figures.py` (confusion matrices, EDA and HMM figures) |
+| Hyperparameter optimisation | `optimisation/optuna_search.py` (Optuna TPE); search record in `results/optuna_trials.csv`, best values in `artifacts/best_params.json`, tuned vs untuned in `results/tuning_comparison.csv` |
+| HMM and Viterbi | `hmm/`: `viterbi.py` (decoder), `metrics.py` (route continuity), `evaluate.py` (beta sweep, classifier-only vs HMM) |
+| API | `api/main.py` (FastAPI: `/health`, `/trips`, `/predict/{trip_id}`, model loading) |
+| UI | `ui/app.py` (Streamlit evaluator UI) |
+| Deployment | `requirements.txt`, `config.yaml`, `docs/CONTRACTS.md`, and the Setup / Run sections below |
+| Visualisations | `maps/` (Folium: `folium_maps.py`, `make_prediction_maps.py`, HTML maps in `maps/out/`), plots in `results/figures/` and `results/plots/` |
+| Supporting results | `results/` (CSVs per model in `results/runs/`, comparison tables, HMM results), `report/screenshots/` (UI and API logs) |
+| Model weights | `artifacts/` (`model.joblib` = deployed tuned LightGBM; `lgbm.joblib`, `logreg.joblib`, `nb.joblib`, `mlp.joblib`; `random_forest.joblib` is 138 MB, so it is regenerated with `python -m models.rf_test`) |
+
+Raw data and the evaluator trips are never committed (see `.gitignore`).
 
 ## Setup
 ```bash
