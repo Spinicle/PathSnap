@@ -98,8 +98,9 @@ def decode(
         raise ValueError("Candidate obs_idx values must refer to rows in the trip track")
     if ((candidates["arc_id"] < 0) | (candidates["arc_id"] >= len(trip["arcs"]))).any():
         raise ValueError("Candidate arc_id values must refer to rows in the trip arcs")
-    if "proj_frac" not in candidates:
-     if "f_proj_frac" in candidates:
+    if "proj_frac" in candidates:
+        pass  # caller supplied it; use as given
+    elif "f_proj_frac" in candidates:
         candidates["proj_frac"] = candidates["f_proj_frac"]
     else:
         candidates["proj_frac"] = 0.5

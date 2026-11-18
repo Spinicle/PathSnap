@@ -19,7 +19,7 @@ cv:
 
 hmm:
   sigma_m: null                    # emission noise if needed (tune on train/student_test only)
-  beta: 25  # transition scale (tune on train/student_test only)
+  beta: 10  # transition scale (tune on train/student_test only)
   max_gap_s: 30
 
 api:
