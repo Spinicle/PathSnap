@@ -1,0 +1,10 @@
+feature,coef,abs_coef
+f_dist_minus_min,-2.1749916,2.1749916
+f_heading_diff,-1.7278992,1.7278992
+f_dist_rank,-1.643691,1.643691
+f_gps_speed,-0.3099169,0.3099169
+f_arc_length_m,0.13846591,0.13846591
+f_dist_m,-0.13581587,0.13581587
+f_n_candidates,-0.123808034,0.123808034
+f_connected_prev,0.085504256,0.085504256
+f_proj_frac,-0.010228179,0.010228179
