@@ -1,10 +1,4 @@
-"""Candidate generation (Owner: A).
-Arcs are straight u->v segments in metres; shapely 2 STRtree, one vectorised
-dwithin query for all points, keep max_k nearest within radius_m.
-
-Projection: trips are spread worldwide (lon -100..137), so a fixed UTM 36N is wrong
-for most of them. Each trip uses the UTM zone of its track centroid.
-"""
+"""Trips span lon -100..137, so a fixed UTM 36N is wrong for most; each trip uses the UTM zone of its track centroid."""
 from functools import lru_cache
 
 import numpy as np
@@ -28,8 +22,7 @@ def _transformer(epsg: int) -> Transformer:
 
 
 def project_trip(trip: dict) -> dict:
-    """Projected track (px, py) and nodes (nx, ny) in metres, per-trip UTM zone.
-    Cached on the trip dict so alignment and features share it."""
+    """Per-trip UTM projection of track and nodes, cached on the trip dict so alignment and features share it."""
     if "_proj" in trip:
         return trip["_proj"]
     tr, nd = trip["track"], trip["nodes"]
@@ -43,8 +36,7 @@ def project_trip(trip: dict) -> dict:
 
 
 def point_seg(px, py, ax, ay, bx, by):
-    """Distance from point(s) to segment(s) a->b (broadcasting) and projection
-    fraction 0..1 along a->b. Zero-length segment -> frac 0, distance to a."""
+    """Point-to-segment distance and 0..1 projection fraction (broadcasting); zero-length segment gives frac 0."""
     dx, dy = bx - ax, by - ay
     L2 = dx * dx + dy * dy
     with np.errstate(invalid="ignore", divide="ignore"):

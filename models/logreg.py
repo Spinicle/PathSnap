@@ -1,7 +1,3 @@
-"""Logistic regression baseline (Owner: A).
-GroupKFold CV via models/common_eval.py, then fit on all of train and score student_test.
-Run: python -m models.logreg
-"""
 import time
 
 import joblib

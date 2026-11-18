@@ -1,7 +1,3 @@
-"""MLP model using the real PathSnap feature tables.
-
-Run: python -m models.mlp
-"""
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -32,7 +28,6 @@ def make_model() -> Pipeline:
 if __name__ == "__main__":
     model = run_baseline("mlp", make_model())
 
-    # Save the loss curve from the final fit on the training data.
     loss_curve = model.named_steps["clf"].loss_curve_
     output = Path("results") / "figures" / "mlp_loss_curve.png"
     output.parent.mkdir(parents=True, exist_ok=True)

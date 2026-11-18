@@ -1,4 +1,3 @@
-"""Folium map generation for observed GPS, road network, and routes."""
 from pathlib import Path
 
 import folium

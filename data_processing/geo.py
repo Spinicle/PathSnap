@@ -12,7 +12,6 @@ _GEOD = Geod(ellps="WGS84")
 
 
 def utm_epsg(lon: float, lat: float) -> int:
-    """Return the UTM EPSG code for a longitude and hemisphere."""
     zone = int(math.floor((lon + 180.0) / 6.0)) % 60 + 1
     return (32600 if lat >= 0 else 32700) + zone
 
@@ -23,11 +22,7 @@ def _transformer(epsg: int) -> Transformer:
 
 
 def project(lon: Any, lat: Any) -> tuple[Any, Any]:
-    """Project a set of points using the UTM zone of their mean location.
-
-    Pass all points from one trip together. To project a trip's GPS points and
-    road nodes with exactly the same CRS, use features.candidates.project_trip.
-    """
+    """Project points with the UTM zone of their mean location; use features.candidates.project_trip for a whole trip."""
     lons, lats = np.asarray(lon, dtype=float), np.asarray(lat, dtype=float)
     valid = np.isfinite(lons) & np.isfinite(lats)
     if not np.any(valid):
@@ -64,7 +59,6 @@ def bearing_deg(lon1: Any, lat1: Any, lon2: Any, lat2: Any) -> float:
 
 
 def heading_deg(lon1: Any, lat1: Any, lon2: Any, lat2: Any) -> float:
-    """Compass heading of travel from one GPS point to the next."""
     return bearing_deg(lon1, lat1, lon2, lat2)
 
 

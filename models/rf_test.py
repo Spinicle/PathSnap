@@ -1,8 +1,4 @@
-"""Random Forest: CV + student_test through run_baseline, same pipeline as the other models.
-Same hyperparameters as models/rf.py (the original CV-only exploration run), except
-n_jobs=-1 instead of 2. With random_state=42 fixed, n_jobs only changes speed, not results.
-Run: python -m models.rf_test
-"""
+"""Same hyperparameters as models/rf.py except n_jobs=-1; with random_state=42 fixed, n_jobs only changes speed."""
 from sklearn.ensemble import RandomForestClassifier
 
 from models.logreg import run_baseline

@@ -1,23 +1,3 @@
-"""Shared grouped cross-validation utilities for candidate-level classifiers.
-
-Example:
-    from models.common_eval import evaluate_model
-
-    results = evaluate_model(
-        estimator=classifier,
-        X=train_df[feature_columns],
-        y=train_df["label"],
-        groups=train_df["trip_id"],
-        observation_ids=train_df["obs_idx"],
-        model_name="random_forest",
-        candidate_ids=train_df["arc_id"],
-        reference_ids=train_df["true_arc_id"],
-    )
-
-The returned DataFrame and ``results/runs/random_forest.csv`` contain one row
-per fold followed by aggregate ``mean`` and ``std`` rows.
-"""
-
 from __future__ import annotations
 
 import time
@@ -57,7 +37,6 @@ _METRIC_COLUMNS = (
 
 
 def _as_1d_array(values: Any, name: str) -> np.ndarray:
-    """Convert a sequence-like input to a one-dimensional NumPy array."""
     array = np.asarray(values)
     if array.ndim != 1:
         raise ValueError(f"{name} must be one-dimensional; received shape {array.shape}.")
@@ -75,7 +54,6 @@ def _validate_non_missing(values: np.ndarray, name: str) -> None:
 
 
 def _validate_hashable(values: np.ndarray, name: str) -> None:
-    """Ensure IDs can be used consistently as observation and candidate keys."""
     for value in values:
         try:
             hash(value)
@@ -84,7 +62,6 @@ def _validate_hashable(values: np.ndarray, name: str) -> None:
 
 
 def _contains_only_binary_labels(values: np.ndarray) -> bool:
-    """Return whether every scalar label is exactly 0 or 1."""
     try:
         return set(values.tolist()).issubset({0, 1})
     except TypeError:
@@ -92,7 +69,6 @@ def _contains_only_binary_labels(values: np.ndarray) -> bool:
 
 
 def _take_rows(values: Any, indices: np.ndarray) -> Any:
-    """Select rows from pandas, NumPy, or scipy sparse matrix inputs."""
     if hasattr(values, "iloc"):
         return values.iloc[indices]
     return values[indices]
@@ -152,12 +128,7 @@ def _observation_top1_accuracy(
     groups: np.ndarray,
     observation_ids: np.ndarray,
 ) -> float:
-    """Measure probability-ranked Top-1 accuracy for observations in candidate rows.
-
-    This metric is conditional on the feature table containing generated candidate
-    rows: observations absent from ``observation_ids`` are not invented and are
-    not included in this denominator.
-    """
+    """Top-1 over observations that have candidate rows; absent observations are not counted."""
     selected: dict[tuple[Any, Any], int] = {}
     for row_index, (trip_id, observation_id) in enumerate(zip(groups, observation_ids)):
         key = (trip_id, observation_id)
@@ -252,41 +223,7 @@ def evaluate_model(
     candidate_ids: Any = None,
     reference_ids: Any = None,
 ) -> pd.DataFrame:
-    """Evaluate a binary candidate classifier with trip-grouped cross-validation.
-
-    A fresh clone is fitted in every GroupKFold split. Predictions use the
-    estimator's ``predict`` method. Observation-level Top-1 ranking uses
-    positive-class probabilities and is calculated only for observations that
-    have candidate rows in the validation data; absent observations are not
-    invented. Log loss and Top-1 accuracy are NaN when probabilities are
-    unavailable. Precision/recall and macro-F1 use sklearn's explicit
-    ``zero_division=0`` convention. Candidate Miss Rate is NaN unless both
-    candidate_ids and reference_ids are supplied.
-
-    Args:
-        estimator: An unfitted scikit-learn-compatible binary classifier.
-        X: Two-dimensional feature matrix; pandas, NumPy, and sparse inputs work.
-        y: Row-aligned binary candidate labels, encoded as 0 and 1.
-        groups: Row-aligned trip IDs. All rows from a trip remain in one fold.
-        observation_ids: Row-aligned IDs used to group candidate rows for Top-1.
-        model_name: Safe filename stem used for ``<model_name>.csv``.
-        n_splits: Number of GroupKFold folds. Must not exceed distinct trip IDs.
-        random_state: Seed applied to unset estimator random_state parameters.
-            GroupKFold itself is deterministic and does not use this seed.
-        results_dir: Directory in which the evaluation CSV is written.
-        candidate_ids: Optional row-aligned candidate arc IDs.
-        reference_ids: Optional row-aligned reference arc IDs. Supply together
-            with candidate_ids to calculate Candidate Miss Rate.
-
-    Returns:
-        A DataFrame with one row per fold and aggregate ``mean``/``std`` rows.
-        The same rows are saved to ``results_dir/<model_name>.csv``.
-
-    Raises:
-        ValueError: If inputs are misaligned, labels are invalid, grouping is
-            impossible, or the model name could escape the results directory.
-        TypeError: If the estimator cannot be cloned as a sklearn estimator.
-    """
+    """Trip-grouped CV of a binary candidate classifier; writes results_dir/<model_name>.csv."""
     if not isinstance(model_name, str) or not model_name.strip():
         raise ValueError("model_name must be a non-empty filename stem.")
     if (

@@ -1,6 +1,3 @@
-
-"""Random Forest evaluation using Yadu's generated training feature dataset."""
-
 from __future__ import annotations
 
 import argparse
@@ -16,7 +13,6 @@ from models.common_eval import evaluate_model
 
 
 def find_feature_dataset() -> Path:
-    """Resolve Yadu's generated train dataset without fabricating a fallback."""
     configured = os.environ.get("PATHSNAP_FEATURES")
     if configured:
         path = Path(configured)
@@ -39,7 +35,6 @@ def find_feature_dataset() -> Path:
 def load_real_training_data(
     dataset_path: Path | None = None,
 ) -> tuple[pd.DataFrame, list[str]]:
-    """Load the real feature table and verify Yadu's exact schema."""
     path = dataset_path or find_feature_dataset()
     data = pd.read_parquet(path)
 
@@ -78,8 +73,6 @@ def run_random_forest(
     dataset_path: Path | None = None,
     n_splits: int = 5,
 ):
-    """Evaluate a resource-conscious Random Forest using grouped CV."""
-
     data, feature_columns = load_real_training_data(dataset_path)
 
     print(f"Loaded dataset: {len(data):,} candidate rows")

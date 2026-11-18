@@ -1,4 +1,4 @@
-"""Per-point labels from .route (Owner: A).
+"""Per-point labels from .route.
 .route is an ordered arc list, NOT one label per GPS point. Monotonic alignment:
 choose route positions r_0 <= r_1 <= ... <= r_{N-1} minimising sum_i dist(p_i, route[r_i]).
 

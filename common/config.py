@@ -1,4 +1,3 @@
-"""Load config.yaml and resolve data paths (env vars win)."""
 import os
 from pathlib import Path
 

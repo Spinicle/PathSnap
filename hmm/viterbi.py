@@ -1,4 +1,3 @@
-"""Classifier-emission HMM and Viterbi route decoder."""
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -72,11 +71,7 @@ def decode(
     beta_m: float | None = None,
     max_gap_s: float | None = None,
 ) -> list[int | None]:
-    """Choose one candidate arc per observation; return None for gaps/no candidates.
-
-    Disconnected candidate sets break the Viterbi chain and restart at the next
-    observation rather than inventing a road-network connection.
-    """
+    """One arc per observation (None for gaps); disconnected candidate sets restart the chain instead of inventing a connection."""
     from features.candidates import project_trip
 
     track = trip["track"]

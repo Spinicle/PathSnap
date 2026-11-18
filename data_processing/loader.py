@@ -1,4 +1,4 @@
-"""Raw file readers. Formats (from Dataset Exploration.pdf, verify yourselves):
+"""Raw file formats:
   .track  lon lat t        (whitespace, no header)
   .nodes  lon lat          (row index = node_id)
   .arcs   from_node to_node (row index = arc_id)

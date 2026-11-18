@@ -1,7 +1,3 @@
-"""Report figures that are not produced elsewhere. Every figure comes from repo data/results.
-Partition is stated in every title. Output: results/figures/.
-Run: python -m report.make_figures
-"""
 import joblib
 import matplotlib
 

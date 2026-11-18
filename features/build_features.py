@@ -1,9 +1,4 @@
-"""Feature table builder (Owner: A). Output schema in docs/CONTRACTS.md.
-Must not read .route except to attach the label column during training.
-
-build_trip_features(trip) works with no route (API path).
-CLI: python -m features.build_features --split train|student_test|all --limit N
-"""
+"""Must not read .route except to attach the label column during training."""
 import argparse
 import os
 import time
@@ -67,14 +62,12 @@ def build_trip_features(trip: dict) -> pd.DataFrame:
     aid = cand["arc_id"].to_numpy()
     df = cand[["trip_id", "obs_idx", "arc_id"]].copy()
 
-    # distance features
     df["f_dist_m"] = cand["dist_m"].to_numpy()
     g = df.groupby("obs_idx", sort=False)["f_dist_m"]
     df["f_dist_rank"] = g.cumcount().to_numpy()
     df["f_dist_minus_min"] = df["f_dist_m"] - g.transform("min")
     df["f_n_candidates"] = g.transform("size")
 
-    # kinematics
     speed = _speed(px, py, t)
     dx, dy, _ = _neighbour_deltas(px, py, t)
     gps_bear = _bearing(dx, dy)

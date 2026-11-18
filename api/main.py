@@ -1,4 +1,3 @@
-"""PathSnap prediction API. Reference routes stay on the server."""
 import json
 import logging
 import time
@@ -99,7 +98,6 @@ def positive_probabilities(model: Any, values: np.ndarray) -> np.ndarray:
 
 
 def best_candidate_per_point(candidates, probabilities, point_count: int):
-    """Return one highest-probability candidate arc per GPS point."""
     predictions: list[int | None] = [None] * point_count
     if candidates.empty:
         return predictions

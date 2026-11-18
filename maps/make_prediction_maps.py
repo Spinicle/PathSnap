@@ -1,11 +1,3 @@
-"""Folium maps of HMM predictions for two student_test trips: the one with the biggest
-HMM top-1 gain and the one with the smallest gain (or a loss), from results/hmm_comparison.csv.
-Predictions use hmm.evaluate.predict_trip (artifacts/model.joblib + hmm.viterbi.decode with
-hmm.beta from config.yaml), i.e. exactly what hmm_comparison.csv measured.
-Map layers come from maps.folium_maps.make_trip_map; this script adds a legend.
-Output: maps/out/<trip>_predicted.html
-Run: python -m maps.make_prediction_maps
-"""
 import pandas as pd
 
 from common.config import CFG, REPO_ROOT

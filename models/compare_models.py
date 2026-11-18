@@ -1,5 +1,3 @@
-"""Build the Phase 1 model comparison and plots from existing fold-level CSVs."""
-
 from __future__ import annotations
 
 import argparse
@@ -36,7 +34,6 @@ METRICS = (
 
 
 def load_fold_results(runs_dir: Path) -> dict[str, pd.DataFrame]:
-    """Load only existing five-fold CV files; never fabricate missing models."""
     available: dict[str, pd.DataFrame] = {}
     for model_key, display_name in MODEL_NAMES.items():
         path = runs_dir / f"{model_key}.csv"
@@ -60,7 +57,6 @@ def load_fold_results(runs_dir: Path) -> dict[str, pd.DataFrame]:
 def aggregate_results(
     fold_results: dict[str, pd.DataFrame],
 ) -> tuple[pd.DataFrame, dict[str, pd.DataFrame]]:
-    """Calculate mean/std from fold rows and return per-model fold frames."""
     rows: list[dict[str, object]] = []
     for model_key, display_name in MODEL_NAMES.items():
         frame = fold_results.get(model_key)
@@ -123,7 +119,6 @@ def plot_metric(
     output_path: Path,
     percentage: bool = False,
 ) -> None:
-    """Create a metric bar chart, excluding unavailable models."""
     mean_column = f"{metric}_mean"
     std_column = f"{metric}_std"
     if mean_column not in aggregates.columns:
@@ -166,7 +161,6 @@ def plot_metric(
 
 
 def generate_plots(aggregates: pd.DataFrame, plots_dir: Path) -> list[Path]:
-    """Generate the six requested comparison plots."""
     specs = (
         ("macro_f1", "Macro F1 comparison", "Macro F1", "macro_f1.png", True),
         ("top1_accuracy", "Top-1 accuracy comparison", "Top-1 accuracy", "top1_accuracy.png", True),
@@ -197,7 +191,6 @@ def generate_plots(aggregates: pd.DataFrame, plots_dir: Path) -> list[Path]:
 
 
 def print_ranking(aggregates: pd.DataFrame) -> None:
-    """Print a concise, measured ranking when enough results are available."""
     def available(metric: str) -> pd.DataFrame:
         column = f"{metric}_mean"
         return aggregates.loc[

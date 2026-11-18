@@ -1,5 +1,3 @@
-"""Streamlit evaluator interface for the PathSnap FastAPI backend."""
-
 from __future__ import annotations
 
 import os
@@ -18,7 +16,6 @@ PREDICT_TIMEOUT_SECONDS = 120
 
 @st.cache_data(ttl=300)
 def fetch_trips() -> list[str]:
-    """Fetch available evaluator trip IDs from the contract-defined endpoint."""
     response = requests.get(
         f"{API_BASE}/trips",
         timeout=TRIPS_TIMEOUT_SECONDS,
@@ -34,7 +31,6 @@ def fetch_trips() -> list[str]:
 
 
 def fetch_prediction(trip_id: str) -> dict[str, Any]:
-    """Fetch and validate the contract-defined prediction response."""
     response = requests.post(
         f"{API_BASE}/predict/{trip_id}",
         timeout=PREDICT_TIMEOUT_SECONDS,
@@ -94,7 +90,6 @@ def validate_coordinates(
 
 
 def percentage(value: Any, label: str) -> str:
-    """Format an API percentage value without recomputing or replacing it."""
     try:
         numeric_value = float(value)
     except (TypeError, ValueError):
@@ -108,7 +103,6 @@ def build_map(
     gps_coordinates: list[list[float]],
     predicted_path: list[list[float]],
 ) -> folium.Map:
-    """Build a GPS/predicted-route Folium map with toggleable layers."""
     all_coordinates = gps_coordinates + predicted_path
     if all_coordinates:
         latitude = sum(point[0] for point in all_coordinates) / len(all_coordinates)
@@ -161,7 +155,6 @@ def build_map(
 
 
 def display_api_error(error: Exception) -> None:
-    """Display concise, safe API failures for connection and HTTP errors."""
     if isinstance(error, requests.exceptions.Timeout):
         st.error("The API request timed out. Please check that the backend is running.")
     elif isinstance(error, requests.exceptions.ConnectionError):
@@ -177,7 +170,6 @@ def display_api_error(error: Exception) -> None:
 
 
 def main() -> None:
-    """Render the Streamlit page and handle API interactions."""
     st.set_page_config(
         page_title="PathSnap – GPS Map Matching",
         page_icon="🗺️",

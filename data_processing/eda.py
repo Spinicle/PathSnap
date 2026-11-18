@@ -1,4 +1,3 @@
-"""Dataset inventory and exploratory visualisations."""
 from pathlib import Path
 
 import matplotlib.pyplot as plt

@@ -1,4 +1,3 @@
-"""Evaluate HMM beta on train trips, then compare HMM on student_test."""
 from pathlib import Path
 
 import joblib

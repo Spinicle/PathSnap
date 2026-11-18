@@ -1,8 +1,3 @@
-"""LightGBM candidate classifier (Owner: Yajat).
-
-Run the shared GroupKFold and student-test evaluation with:
-    python -m models.lgbm
-"""
 import numpy as np
 import pandas as pd
 from lightgbm import LGBMClassifier
@@ -36,7 +31,6 @@ def fit_model(
     seed: int = 42,
     **params,
 ) -> LGBMClassifier:
-    """Fit on labeled candidate rows; trip/grouping is handled by shared CV code."""
     cols = FEATURE_COLS if feature_cols is None else feature_cols
     missing = [col for col in cols if col not in features.columns]
     if missing:
@@ -64,7 +58,6 @@ def predict_proba(
     features: pd.DataFrame,
     feature_cols: list[str] | None = None,
 ) -> np.ndarray:
-    """Return P(label=1) for each candidate row, matching the shared model contract."""
     cols = FEATURE_COLS if feature_cols is None else feature_cols
     missing = [col for col in cols if col not in features.columns]
     if missing:
@@ -78,7 +71,6 @@ def predict_proba(
 
 
 def run() -> LGBMClassifier:
-    """Run the same grouped-CV and student-test protocol as the baselines."""
     from models.logreg import run_baseline
 
     return run_baseline("lgbm", make_model())

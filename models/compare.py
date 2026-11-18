@@ -1,14 +1,3 @@
-"""Final comparison table (report section 3.1) + student-test plots.
-Complements models/compare_models.py (Vyshali), which covers the CV metrics and CV plots
-(results/model_comparison.csv, results/plots/). This script does not touch those files.
-Reads CV macro F1 from results/runs/<model>.csv and student-test numbers from
-results/runs/<model>_student_test.csv; for lgbm_tuned the student-test row comes from
-results/tuning_comparison.csv (written by optimisation/optuna_search.py).
-A model is included only if its CSVs exist, so re-running picks up new results.
-Route continuity = classifier-only argmax per GPS point on student_test, scored with
-hmm.metrics.route_continuity; NaN (with a warning) until that module exists.
-Run: python -m models.compare
-"""
 import joblib
 import matplotlib
 

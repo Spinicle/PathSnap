@@ -18,7 +18,7 @@ Organised by the components required in the Deliverables guideline (Deliverable 
 | HMM and Viterbi | `hmm/`: `viterbi.py` (decoder), `metrics.py` (route continuity), `evaluate.py` (beta sweep, classifier-only vs HMM) |
 | API | `api/main.py` (FastAPI: `/health`, `/trips`, `/predict/{trip_id}`, model loading) |
 | UI | `ui/app.py` (Streamlit evaluator UI) |
-| Deployment | `requirements.txt`, `config.yaml`, `docs/CONTRACTS.md`, and the Setup / Run sections below |
+| Deployment | `requirements.txt`, `config.yaml`, and the Setup / Run sections below |
 | Visualisations | `maps/` (Folium: `folium_maps.py`, `make_prediction_maps.py`, HTML maps in `maps/out/`), plots in `results/figures/` and `results/plots/` |
 | Supporting results | `results/` (CSVs per model in `results/runs/`, comparison tables, HMM results), `report/screenshots/` (UI and API logs) |
 | Model weights | `artifacts/` (`model.joblib` = deployed tuned LightGBM; `lgbm.joblib`, `logreg.joblib`, `nb.joblib`, `mlp.joblib`; `random_forest.joblib` is 138 MB, so it is regenerated with `python -m models.rf_test`) |

@@ -1,10 +1,3 @@
-"""MLP training and validation loss per epoch (report section 3.3).
-Same MLP config and pipeline as models/mlp.py. Validation = 20% of the 78 kept train trips,
-held out by trip (GroupShuffleSplit, seed 42); the scaler is fit on the training trips only.
-One partial_fit call = one epoch over the training trips; log loss is recorded on both sets.
-Output: results/figures/mlp_train_val_loss.png, results/runs/mlp_loss_curves.csv
-Run: python -m models.mlp_loss_curves
-"""
 from pathlib import Path
 
 import matplotlib

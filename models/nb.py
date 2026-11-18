@@ -1,6 +1,3 @@
-"""Gaussian Naive Bayes baseline (Owner: A). Same protocol as models/logreg.py.
-Run: python -m models.nb
-"""
 from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler

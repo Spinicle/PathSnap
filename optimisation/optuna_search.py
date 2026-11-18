@@ -1,5 +1,3 @@
-"""Optuna hyperparameter tuning for the existing PathSnap LightGBM model."""
-
 from __future__ import annotations
 
 import argparse
@@ -31,7 +29,6 @@ BROKEN_TRAIN_TRIPS = ["00000054", "00000033"]
 
 
 def suggest_params(trial: optuna.Trial) -> dict:
-    """Suggest exactly the requested Optuna search ranges."""
     return {
         "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.2, log=True),
         "num_leaves": trial.suggest_int("num_leaves", 15, 255, log=True),
@@ -65,7 +62,6 @@ def prepare_training_data() -> tuple[pd.DataFrame, list[str]]:
 
 
 def trial_dataframe(study: optuna.study.Study) -> pd.DataFrame:
-    """Convert Optuna trials to a stable, readable CSV representation."""
     rows: list[dict] = []
     param_names = (
         "learning_rate",
@@ -89,7 +85,6 @@ def trial_dataframe(study: optuna.study.Study) -> pd.DataFrame:
 
 
 def save_history_plot(study: optuna.study.Study, output_path: Path) -> None:
-    """Save an optimization history plot using Matplotlib's headless backend."""
     completed = [
         (trial.number, trial.value)
         for trial in study.trials
@@ -130,7 +125,6 @@ def evaluate_student_test(
     test: pd.DataFrame,
     feature_columns: list[str],
 ) -> dict:
-    """Fit one tuned model on train and evaluate once on student-test data."""
     train_start = time.perf_counter()
     model.fit(
         train[feature_columns].to_numpy(dtype=np.float32),
@@ -167,7 +161,6 @@ def save_tuning_comparison(
     tuned_student: dict,
     output_path: Path,
 ) -> None:
-    """Compare the tuned model with the existing untuned LightGBM outputs."""
     untuned_cv_path = REPO_ROOT / "results" / "runs" / "lgbm.csv"
     untuned_student_path = REPO_ROOT / "results" / "runs" / "lgbm_student_test.csv"
 
@@ -213,7 +206,6 @@ def save_tuning_comparison(
 
 
 def main(trials: int = 40, timeout: int | None = None) -> optuna.study.Study:
-    """Run Optuna tuning and the tuned LightGBM evaluation."""
     if trials < 1:
         raise ValueError("--trials must be at least 1")
     if timeout is not None and timeout < 1:

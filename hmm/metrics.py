@@ -1,12 +1,5 @@
-"""Metrics for evaluating predicted road sequences."""
-
-
 def route_continuity(arcs, trip) -> float:
-    """Share of consecutive predicted arcs connected in the directed road graph.
-
-    None predictions are skipped, then consecutive duplicate arc IDs are collapsed.
-    Returns NaN when fewer than two arcs remain.
-    """
+    """Share of consecutive predicted arcs connected in the directed graph; skips None, collapses repeats, NaN if < 2 arcs."""
     sequence = []
 
     for arc_id in arcs:
