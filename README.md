@@ -41,7 +41,46 @@ streamlit run ui/app.py
 Allow port 8000 through the Windows firewall on Laptop 1.
 
 ## Reproduce results
-TODO: exact command order (features -> train_compare -> optuna -> viterbi eval -> maps).
+Run from the repo root, in this order. Seed 42 everywhere.
+```bash
+set PATHSNAP_DATA=../Student folder
+
+# 1. candidate generation + feature table -> cache/features_*.parquet, cache/labels_*.parquet
+python -m features.build_features --split all
+
+# 2. models: GroupKFold(5) CV on train + student_test -> results/runs/<model>.csv,
+#    results/runs/<model>_student_test.csv, artifacts/<model>.joblib
+python -m models.logreg
+python -m models.nb
+python -m models.rf_test
+python -m models.lgbm
+python -m models.mlp
+
+# 3. comparison table + plots -> results/model_comparison_final.csv, results/figures/
+python -m models.compare
+
+# 4. Optuna (TPE) on LightGBM -> results/optuna_trials.csv, artifacts/best_params.json,
+#    artifacts/model.joblib, results/tuning_comparison.csv
+python -m optimisation.optuna_search --trials 40 --timeout 1200
+
+# 5. HMM / Viterbi evaluation -> results/hmm_comparison.csv  (pending: hmm/evaluate.py, Yajat)
+python -m hmm.evaluate
+
+# 6. Folium maps -> maps/out/
+python -m maps.folium_maps
+
+# 7. API (Laptop 1)
+set PATHSNAP_EVAL_DATA=<path to evaluator trips>
+uvicorn api.main:app --host 0.0.0.0 --port 8000
+
+# 8. UI (Laptop 2)
+set PATHSNAP_API=http://<laptop1-ip>:8000
+streamlit run ui/app.py
+```
+Random Forest: `models/rf_test.py` is the run the results come from. It reuses the
+hyperparameters of `models/rf.py` (the original CV-only exploration run, not a required step)
+with `n_jobs=-1`. With `random_state=42` fixed, `n_jobs` only changes speed, not results.
 
 ## AI use disclosure
-TODO: list where AI tools were used.
+- Claude Code: label alignment, candidate generation, feature builder, baselines, comparison script (reviewed and explained by Yadu)
+- TODO: teammates add their entries
