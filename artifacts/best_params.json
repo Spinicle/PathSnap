@@ -1,0 +1,20 @@
+{
+  "best_params": {
+    "learning_rate": 0.030710573677773714,
+    "num_leaves": 222,
+    "min_child_samples": 89,
+    "n_estimators": 399,
+    "subsample": 0.5780093202212182,
+    "colsample_bytree": 0.5779972601681014,
+    "reg_lambda": 0.0017073967431528124
+  },
+  "best_cv_macro_f1": 0.9038273038632759,
+  "n_trials": 2,
+  "n_splits": 5,
+  "grouping_column": "trip_id",
+  "random_seed": 42,
+  "excluded_train_trips": [
+    "00000054",
+    "00000033"
+  ]
+}
